@@ -13,8 +13,8 @@ Changelog, examples, installation guide and explanation on:
 
 shell.executable("/bin/bash")
 
-configfile: "profile/pipeline_parameters.yaml"
-configfile: "profile/variables.yaml"
+configfile: "/output/$FILENAME/profile/pipeline_parameters.yaml"
+configfile: "/output/$FILENAME/profile/variables.yaml"
 
 import pprint
 import os
@@ -22,7 +22,7 @@ import yaml
 yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
 SAMPLES = {}
-with open(config["sample_sheet"]) as sample_sheet_file:
+with open("/output/$FILENAME/sample_sheet.yaml") as sample_sheet_file:
     SAMPLES = yaml.load(sample_sheet_file) # SAMPLES is a dict with sample in the form sample > read number > file. E.g.: SAMPLES["sample_1"]["R1"] = "x_R1.gz"
 
 #################################################################################
@@ -45,30 +45,30 @@ onstart:
     else:
         print("\tAll specified files are present!")
     shell("""
-        mkdir -p $FILENAME
+        mkdir -p /output/$FILENAME/results
         echo -e "\nLogging pipeline settings..."
 
         echo -e "\tGenerating methodological hash (fingerprint)..."
-        echo -e "This is the link to the code used for this analysis:\thttps://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")" > $FILENAME/log_git.txt
-        echo -e "This code with unique fingerprint $(git log -n1 --pretty=format:"%H") was committed by $(git log -n1 --pretty=format:"%an <%ae>") at $(git log -n1 --pretty=format:"%ad")" >> $FILENAME/log_git.txt
+        echo -e "This is the link to the code used for this analysis:\thttps://github.com/DennisSchmitz/Jovian/tree/$(git log -n 1 --pretty=format:"%H")" > /output/$FILENAME/results/log_git.txt
+        echo -e "This code with unique fingerprint $(git log -n1 --pretty=format:"%H") was committed by $(git log -n1 --pretty=format:"%an <%ae>") at $(git log -n1 --pretty=format:"%ad")" >> /output/$FILENAME/results/log_git.txt
 
         echo -e "\tGenerating full software list of current Conda environment (\"Jovian_master\")..."
-        conda list > $FILENAME/log_conda.txt
+        conda list > /output/$FILENAME/results/log_conda.txt
 
         echo -e "\tGenerating used databases log..."
-        echo -e "==> User-specified background reference (default: Homo Sapiens NCBI GRch38 NO DECOY genome): <==\n$(ls -lah $(grep "    background_ref:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" > $FILENAME/log_db.txt
-        echo -e "\n==> Virus-Host Interaction Database: <==\n$(ls -lah $(grep "    virusHostDB:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> $FILENAME/log_db.txt
-        echo -e "\n==> Krona Taxonomy Database: <==\n$(ls -lah $(grep "    Krona_taxonomy:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> $FILENAME/log_db.txt
-        echo -e "\n==> NCBI new_taxdump Database: <==\n$(ls -lah $(grep "    NCBI_new_taxdump_rankedlineage:" profile/pipeline_parameters.yaml | cut -f 2 -d ":") $(grep "    NCBI_new_taxdump_host:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> $FILENAME/log_db.txt
-        echo -e "\n==> NCBI Databases as specified in ~/.ncbirc: <==\n$(ls -lah $(grep "BLASTDB=" ~/.ncbirc | cut -f 2 -d "=" | tr "::" " "))\n" >> $FILENAME/log_db.txt
+        echo -e "==> User-specified background reference (default: Homo Sapiens NCBI GRch38 NO DECOY genome): <==\n$(ls -lah $(grep "    background_ref:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" > /output/$FILENAME/results/log_db.txt
+        echo -e "\n==> Virus-Host Interaction Database: <==\n$(ls -lah $(grep "    virusHostDB:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> /output/$FILENAME/results/log_db.txt
+        echo -e "\n==> Krona Taxonomy Database: <==\n$(ls -lah $(grep "    Krona_taxonomy:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> /output/$FILENAME/results/log_db.txt
+        echo -e "\n==> NCBI new_taxdump Database: <==\n$(ls -lah $(grep "    NCBI_new_taxdump_rankedlineage:" profile/pipeline_parameters.yaml | cut -f 2 -d ":") $(grep "    NCBI_new_taxdump_host:" profile/pipeline_parameters.yaml | cut -f 2 -d ":"))\n" >> /output/$FILENAME/results/log_db.txt
+        echo -e "\n==> NCBI Databases as specified in ~/.ncbirc: <==\n$(ls -lah $(grep "BLASTDB=" ~/.ncbirc | cut -f 2 -d "=" | tr "::" " "))\n" >> /output/$FILENAME/results/log_db.txt
         
         echo -e "\tGenerating config file log..."
-        rm -f $FILENAME/log_config.txt
+        rm -f /output/$FILENAME/results/log_config.txt
         for file in profile/*.yaml
         do
-            echo -e "\n==> Contents of file \"${{file}}\": <==" >> $FILENAME/log_config.txt
-            cat ${{file}} >> $FILENAME/log_config.txt
-            echo -e "\n\n" >> $FILENAME/log_config.txt
+            echo -e "\n==> Contents of file \"${{file}}\": <==" >> /output/$FILENAME/results/log_config.txt
+            cat ${{file}} >> /output/$FILENAME/results/log_config.txt
+            echo -e "\n\n" >> /output/$FILENAME/results/log_config.txt
         done
     """)
 
@@ -103,12 +103,12 @@ rule all:
         expand("data/scaffolds_filtered/{sample}_GC.bedgraph", sample = SAMPLES), # Percentage GC content per specified window
         expand("data/taxonomic_classification/{sample}.blastn", sample = SAMPLES), # MegablastN output
         expand("data/tables/{sample}_{extension}", sample = SAMPLES, extension = [ 'taxClassified.tsv', 'taxUnclassified.tsv', 'virusHost.tsv' ]), # Tab seperated tables with merged data
-        expand("$FILENAME/{file}", file = [ 'all_taxClassified.tsv', 'all_taxUnclassified.tsv', 'all_virusHost.tsv', 'all_filtered_SNPs.tsv' ]), # Concatenated classification, virus host and typing tool tables
-        expand("$FILENAME/{file}", file = [ 'heatmaps/Superkingdoms_heatmap.html', 'Sample_composition_graph.html', 'Taxonomic_rank_statistics.tsv', 'Virus_rank_statistics.tsv', 'Phage_rank_statistics.tsv', 'Bacteria_rank_statistics.tsv' ]), # Taxonomic profile and heatmap output
-        "$FILENAME/heatmaps/Virus_heatmap.html", # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
-        "$FILENAME/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
-        "$FILENAME/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
-        expand("$FILENAME/{file}.html", file = [ 'multiqc', 'krona' ]), # HTML Reports
+        expand("/output/$FILENAME/results/{file}", file = [ 'all_taxClassified.tsv', 'all_taxUnclassified.tsv', 'all_virusHost.tsv', 'all_filtered_SNPs.tsv' ]), # Concatenated classification, virus host and typing tool tables
+        expand("/output/$FILENAME/results/{file}", file = [ 'heatmaps/Superkingdoms_heatmap.html', 'Sample_composition_graph.html', 'Taxonomic_rank_statistics.tsv', 'Virus_rank_statistics.tsv', 'Phage_rank_statistics.tsv', 'Bacteria_rank_statistics.tsv' ]), # Taxonomic profile and heatmap output
+        "/output/$FILENAME/results/heatmaps/Virus_heatmap.html", # Virus (excl. phages) order|family|genus|species level heatmap for the entire run
+        "/output/$FILENAME/results/heatmaps/Phage_heatmap.html", # Phage order|family|genus|species heatmaps for the entire run (based on a selection of phage families)
+        "/output/$FILENAME/results/heatmaps/Bacteria_heatmap.html", # Bacteria phylum|class|order|family|genus|species level heatmap for the entire run
+        expand("/output/$FILENAME/results/{file}.html", file = [ 'multiqc', 'krona' ]), # HTML Reports
         expand("data/html/js-end.ok"),
 
 #################################################################################
@@ -582,8 +582,8 @@ rule MultiQC_report:
         expand("logs/Clean_the_data_{sample}.log", sample = SAMPLES),
         expand("logs/HuGo_removal_pt1_alignment_{sample}.log", sample = SAMPLES),
     output:
-        "$FILENAME/multiqc.html",
-        expand("$FILENAME/multiqc_data/multiqc_{program}.txt", program = ['trimmomatic','bowtie2','fastqc']),
+        "/output/$FILENAME/results/multiqc.html",
+        expand("/output/$FILENAME/results/multiqc_data/multiqc_{program}.txt", program = ['trimmomatic','bowtie2','fastqc']),
     conda:
         "envs/MultiQC_report.yaml"
     benchmark:
@@ -596,7 +596,7 @@ rule MultiQC_report:
     shell:
         """
 multiqc --force --config {params.config_file} \
--o $FILENAME/ -n multiqc.html {input} > {log} 2>&1
+-o /output/$FILENAME/results/ -n multiqc.html {input} > {log} 2>&1
         """
 
     #############################################################################
@@ -655,7 +655,7 @@ rule Krona_chart_combine:
     input:
         sorted(expand("data/taxonomic_classification/{sample}.taxMagtab", sample = set(SAMPLES))),
     output:
-        "$FILENAME/krona.html"
+        "/output/$FILENAME/results/krona.html"
     conda:
         "envs/Krona_plot.yaml"
     benchmark:
@@ -684,7 +684,7 @@ rule count_mapped_reads:
         "data/scaffolds_filtered/{sample}_sorted.bam"
         #expand("data/scaffolds_filtered/{sample}_sorted.bam", sample = SAMPLES)
     output:
-        "$FILENAME/counts/Mapped_read_counts-{sample}.tsv"
+        "/output/$FILENAME/results/counts/Mapped_read_counts-{sample}.tsv"
     conda:
         "envs/scaffold_analyses.yaml"
     benchmark:
@@ -699,9 +699,9 @@ bash bin/count_mapped_reads.sh {input} > {output} 2> {log}
 
 rule concatenate_read_counts:
     input:
-        expand("$FILENAME/counts/Mapped_read_counts-{sample}.tsv", sample = SAMPLES)
+        expand("/output/$FILENAME/results/counts/Mapped_read_counts-{sample}.tsv", sample = SAMPLES)
     output:
-        "$FILENAME/counts/Mapped_read_counts.tsv"
+        "/output/$FILENAME/results/counts/Mapped_read_counts.tsv"
     benchmark:
         "logs/benchmark/concatenate_read_counts.txt"
     threads: 1
@@ -717,18 +717,18 @@ rule concatenate_read_counts:
         
 rule quantify_output:
     input:
-        fastqc = "$FILENAME/multiqc_data/multiqc_fastqc.txt",
-        trimmomatic = "$FILENAME/multiqc_data/multiqc_trimmomatic.txt",
+        fastqc = "/output/$FILENAME/results/multiqc_data/multiqc_fastqc.txt",
+        trimmomatic = "/output/$FILENAME/results/multiqc_data/multiqc_trimmomatic.txt",
         hugo = expand("data/cleaned_fastq/{sample}_{suffix}.fq",
                       sample = set(SAMPLES),
                       suffix = [ "pR1", "pR2", "unpaired" ]),
-        classified = "$FILENAME/all_taxClassified.tsv",
-        unclassified = "$FILENAME/all_taxUnclassified.tsv",
-        mapped_reads = "$FILENAME/counts/Mapped_read_counts.tsv"
+        classified = "/output/$FILENAME/results/all_taxClassified.tsv",
+        unclassified = "/output/$FILENAME/results/all_taxUnclassified.tsv",
+        mapped_reads = "/output/$FILENAME/results/counts/Mapped_read_counts.tsv"
     output:
-        counts = "$FILENAME/profile_read_counts.csv",
-        percentages = "$FILENAME/profile_percentages.csv",
-        graph = "$FILENAME/Sample_composition_graph.html"
+        counts = "/output/$FILENAME/results/profile_read_counts.csv",
+        percentages = "/output/$FILENAME/results/profile_percentages.csv",
+        graph = "/output/$FILENAME/results/Sample_composition_graph.html"
     conda:
         "envs/heatmaps.yaml"
     benchmark:
@@ -758,18 +758,18 @@ python bin/quantify_profiles.py \
 
 rule draw_heatmaps:
     input:
-        classified = "$FILENAME/all_taxClassified.tsv",
-        numbers = "$FILENAME/multiqc_data/multiqc_trimmomatic.txt"
+        classified = "/output/$FILENAME/results/all_taxClassified.tsv",
+        numbers = "/output/$FILENAME/results/multiqc_data/multiqc_trimmomatic.txt"
     output:
-        super_quantities="$FILENAME/Superkingdoms_quantities_per_sample.csv",
-        super="$FILENAME/heatmaps/Superkingdoms_heatmap.html",
-        virus="$FILENAME/heatmaps/Virus_heatmap.html",
-        phage="$FILENAME/heatmaps/Phage_heatmap.html",
-        bact="$FILENAME/heatmaps/Bacteria_heatmap.html",
-        stats="$FILENAME/Taxonomic_rank_statistics.tsv",
-        vir_stats="$FILENAME/Virus_rank_statistics.tsv",
-        phage_stats="$FILENAME/Phage_rank_statistics.tsv",
-        bact_stats="$FILENAME/Bacteria_rank_statistics.tsv"
+        super_quantities="/output/$FILENAME/results/Superkingdoms_quantities_per_sample.csv",
+        super="/output/$FILENAME/results/heatmaps/Superkingdoms_heatmap.html",
+        virus="/output/$FILENAME/results/heatmaps/Virus_heatmap.html",
+        phage="/output/$FILENAME/results/heatmaps/Phage_heatmap.html",
+        bact="/output/$FILENAME/results/heatmaps/Bacteria_heatmap.html",
+        stats="/output/$FILENAME/results/Taxonomic_rank_statistics.tsv",
+        vir_stats="/output/$FILENAME/results/Virus_rank_statistics.tsv",
+        phage_stats="/output/$FILENAME/results/Phage_rank_statistics.tsv",
+        bact_stats="/output/$FILENAME/results/Bacteria_rank_statistics.tsv"
     conda:
         "envs/heatmaps.yaml"
     benchmark:
@@ -825,9 +825,9 @@ rule Concat_files:
     input:
         expand("data/tables/{sample}_{extension}", sample = SAMPLES, extension = ['taxClassified.tsv','taxUnclassified.tsv','virusHost.tsv']),
     output:
-        taxClassified="$FILENAME/all_taxClassified.tsv",
-        taxUnclassified="$FILENAME/all_taxUnclassified.tsv",
-        virusHost="$FILENAME/all_virusHost.tsv",
+        taxClassified="/output/$FILENAME/results/all_taxClassified.tsv",
+        taxUnclassified="/output/$FILENAME/results/all_taxUnclassified.tsv",
+        virusHost="/output/$FILENAME/results/all_virusHost.tsv",
     benchmark:
         "logs/benchmark/Concat_files.txt"
     threads: 1
@@ -849,7 +849,7 @@ rule Concat_filtered_SNPs:
     input:
         expand("data/scaffolds_filtered/{sample}_filtered.vcf", sample = SAMPLES)
     output:
-        "$FILENAME/all_filtered_SNPs.tsv"
+        "/output/$FILENAME/results/all_filtered_SNPs.tsv"
     conda:
         "envs/data_wrangling.yaml"
     benchmark:
@@ -871,7 +871,7 @@ python bin/concat_filtered_vcf.py {params.vcf_folder_glob} {output} > {log} 2>&1
 onerror:
     shell("""
         rm -f data/scaffolds_filtered/*.html
-        rm -f $FILENAME/igv.html
+        rm -f /output/$FILENAME/results/igv.html
         rm -rf data/html/
     """)
 
@@ -905,11 +905,11 @@ onsuccess:
         bin/set_symlink.sh
 
         echo -e "\tGenerating HTML index of log files..."
-        tree -hD --dirsfirst -H "../logs" -L 2 -T "Logs overview" --noreport --charset utf-8 -P "*" -o $FILENAME/logfiles_index.html logs/
+        tree -hD --dirsfirst -H "../logs" -L 2 -T "Logs overview" --noreport --charset utf-8 -P "*" -o /output/$FILENAME/results/logfiles_index.html logs/
 
         echo -e "\tGenerating Snakemake report..."
         snakemake --unlock --config sample_sheet=sample_sheet.yaml
-        snakemake --report $FILENAME/snakemake_report.html --config sample_sheet=sample_sheet.yaml
+        snakemake --report /output/$FILENAME/results/snakemake_report.html --config sample_sheet=sample_sheet.yaml
 
         echo -e "Finished"
     """)
