@@ -18,7 +18,7 @@ import os
 import yaml
 yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
-RUN_NAME = config['run-id']
+RUN_NAME = config["run_id"]
 configfile: f"/output/{RUN_NAME}/profile/pipeline_parameters.yaml"
 configfile: f"/output/{RUN_NAME}/profile/variables.yaml"
 
