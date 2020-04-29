@@ -18,7 +18,7 @@ import os
 import yaml
 yaml.warnings({'YAMLLoadWarning': False}) # Suppress yaml "unsafe" warnings.
 
-RUN_NAME = os.getenv('FILENAME')
+RUN_NAME = os.environ['FILENAME']
 configfile: f"/output/{RUN_NAME}/profile/pipeline_parameters.yaml"
 configfile: f"/output/{RUN_NAME}/profile/variables.yaml"
 
