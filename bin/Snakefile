@@ -193,7 +193,10 @@ onerror:
 onsuccess:
     shell("""
         echo -e "\nStarting virus typing, this may take a while...\n"
-        bash jovian -vt all
+        if ! bash bin/includes/Typingtool_check all; then
+            exit 1
+        fi
+        bash bin/scripts/virus_typing.sh all
         echo -e "Virus typing finished."
 
         echo -e "\nCleaning up..."
