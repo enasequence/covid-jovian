@@ -206,19 +206,6 @@ onsuccess:
         echo -e "\tRemoving temporary files..."
         if [ "{config[remove_temp]}" != "0" ]
         then
-            rm -rf data/FastQC_pretrim/
-            rm -rf data/FastQC_posttrim/
-            rm -rf data/cleaned_fastq/fastq_without_HuGo_removal/
-            rm -f data/scaffolds_filtered/*_insert_size_histogram.pdf
-            rm -f data/scaffolds_filtered/*_insert_size_metrics.txt
-            rm -f data/scaffolds_filtered/*_MinLenFiltSummary.stats
-            rm -f data/scaffolds_filtered/*_perMinLenFiltScaffold.stats
-            rm -f data/scaffolds_filtered/*nt.fasta.sizes
-            rm -f data/scaffolds_filtered/*.windows
-            rm -f data/taxonomic_classification/*.taxtab
-            rm -f data/taxonomic_classification/*.taxMagtab
-            rm -f data/taxonomic_classification/*_lca_*
-            rm -f data/taxonomic_classification/*_nolca_*
             rm -rf data/html/
         else
             echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
