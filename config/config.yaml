@@ -1,7 +1,4 @@
-cores: 19
-config:
-   sample_sheet=sample_sheet.yaml
+cores: 250
 latency-wait: 60
 use-conda: true
-conda-prefix: /git/.snakemake/conda
 jobname: Jovian_{name}.jobid{jobid}
