@@ -111,3 +111,10 @@ PCR_dup_removal: true # For development and debug only. Set this to false to NOT
 ######################################
 ### Databases                      ###
 ######################################
+databases:
+    background_ref: /databases/Human_genome/genome.fa
+    Krona_taxonomy: /databases/krona_taxonomy/
+    virusHostDB: /databases/Virus-Host_interaction_db//virushostdb.tsv
+    NCBI_new_taxdump_rankedlineage: /databases/new_taxdump/rankedlineage.dmp.delim
+    NCBI_new_taxdump_host: /databases/new_taxdump/host.dmp.delim
+    MGKit_taxonomy: /database/mgkit_taxonomy/
