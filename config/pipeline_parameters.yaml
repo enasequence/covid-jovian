@@ -8,9 +8,8 @@ WrapperSettings:
 
 
 sample_sheet: sample_sheet.yaml
-reference_file: NONE
-primer_file: NONE
-
+reference_file: installer_files/example_ref.fasta
+primer_file: installer_files/example_primer.fasta
 ######################################
 ### Technical parameters           ###
 ######################################
