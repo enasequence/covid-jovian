@@ -1,6 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC1091
-
+source /git/bin/includes/functions
 
 ### Pass other CLI arguments along to Snakemake
 if [ ! -d "${INPUT_DIR}" ]; then
