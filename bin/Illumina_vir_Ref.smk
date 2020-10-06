@@ -297,6 +297,8 @@ onsuccess:
         if [ "{config[remove_temp]}" != "0" ]; then
             rm -rf {datadir}{html}   # Remove intermediate IGVjs html chunks.
             rm -rf {datadir}{cln}{hugo_no_rm}    # Remove HuGo alignment files
+            rm -rf {datadir}it1
+            rm -rf {datadir}cleaned_fastq
         else
             echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
         fi
