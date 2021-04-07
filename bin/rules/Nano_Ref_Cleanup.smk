@@ -1,21 +1,19 @@
-
-
-
-
 rule Cleanup:
     input:
-        fastq   =   rules.Cut_primers.output.cleaneddata_pt1
+        fastq   =   rules.Remove_Adapters_pt2.output
     output:
         qc_fastq    =   f"{datadir + cln + datadir}" + "{sample}.fastq",
         qc_html     =   f"{datadir + cln + html}" + "{sample}.fastp.html",
         qc_json     =   f"{datadir + cln + json}" + "{sample}.fastp.json"
     conda:
-        f"{conda_envs}QC_and_clean.yaml"
+        f"{conda_envs}Nano_clean.yaml"
     log:
         f"{logdir}" + "Data_Cleanup_{sample}.log"
     benchmark:
         f"{logdir + bench}" + "Data_Cleanup_{sample}.txt"
     threads: config["threads"]["Nanopore_cleanup"]
+    resources: 
+        memory = (config["threads"]["Nanopore_cleanup"] * 10) * 1024
     params:
         QualityFilter   =   config["Nanopore_ref"]["Quality_score"]
     shell:

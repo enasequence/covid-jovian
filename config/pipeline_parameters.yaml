@@ -30,6 +30,9 @@ threads:
     Nanopore_reference_alignment: 6
     Nanopore_cleanup: 12
     Nanopore_primer_removal: 6
+    Illumina_RemovePrimers: 12
+    Nanopore_SoftClipper: 2
+    Nanopore_QC: 6
 
 ######################################
 ### Pipeline parameters            ###
@@ -99,13 +102,15 @@ Nanopore_ref:
     Primer_cutoff_minus: -30
     
     Quality_score: 13
+    Primer_min_overlap: 4
+    Primer_error_rate: 0.3
+    Primer_repeat_search: 3
 
 
 #! Options for the metagenomics workflow, for developers only
 #TODO hier nog aparte yaml parent voor maken, updaten verwijzingen in rest v/d code. Is duidelijker/leesbaarder.
 remove_temp: 1 # For development and debug only. If you set this to 0 you will keep the HuGo alignment data which can lead to patient privacy concerns.
 PCR_dup_removal: true # For development and debug only. Set this to false to NOT remove PCR duplicates in the metagenomic output. N.B. this is not advised and mainly in here for debugging purposes: depending on the dataset, not removing PCR-dups gives a false sense of confidence (inflated coverage metrics), false SNP-calls and increases turnaround time of downstream processes.
-
 
 ######################################
 ### Databases                      ###
