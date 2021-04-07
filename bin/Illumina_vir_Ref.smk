@@ -64,6 +64,17 @@ with open(config["sample_sheet"]) as sample_sheet_file:
 reference           =   config["reference_file"]
 reference_basename  =   os.path.splitext(os.path.basename(reference))[0]
 
+primervalue = config["primer_file"]
+
+if primervalue.upper() == "NONE":
+    with open("placeholder_primers.fasta", "w") as fileout:
+        fileout.write(""">Placeholder
+EXAMPLE""")
+    primerfile = "placeholder_primers.fasta"
+    prstatus = "NONE"
+else:
+    prstatus = "SET"
+    primerfile = primervalue
 
 #@################################################################################
 #@#### Specify Jovian's final output:                                        #####
@@ -83,12 +94,13 @@ localrules:
 
 rule all:
     input:
-        expand( "{p}{sample}_{read}.fq",
-                p       =   f"{datadir + cln}",
+        expand( "{p}{sample}_{read}.fastq",
+                p       =   f"{datadir + cln + hugo_no_rm}",
                 sample  =   SAMPLES,
                 read    =   [   'pR1',
                                 'pR2',
-                                'unpaired'
+                                'uR1',
+                                'uR2'
                                 ]
                 ), # Extract unmapped & paired reads AND unpaired from HuGo alignment; i.e. cleaned fastqs #TODO omschrijven naar betere smk syntax
         expand( "{p}{ref}{extension}",
@@ -191,7 +203,7 @@ rule all:
         f"{res}SNPs.tsv",
         f"{res}BoC_int.tsv", # Integer BoC overview in .tsv format
         f"{res}BoC_pct.tsv", # Percentage BoC overview in .tsv format
-        f"{res}igv.html", # IGVjs output html
+        f"{res}igv_ilr.html", # IGVjs output html
         f"{res}multiqc.html" # MultiQC report
 
 
@@ -240,15 +252,14 @@ onstart:
 
 include: f"{rls}QC_raw.smk"
 include: f"{rls}CleanData.smk"
-include: f"{rls}QC_clean.smk"
 
 #>############################################################################
 #>#### Removal of background host data                                   #####
 #>############################################################################
 
-include: f"{rls}BG_removal_1.smk"
-include: f"{rls}BG_removal_2.smk"
-include: f"{rls}BG_removal_3.smk"
+#include: f"{rls}BG_removal_1.smk"
+#include: f"{rls}BG_removal_2.smk"
+#include: f"{rls}BG_removal_3.smk"
 
 
 ###########! nuttig om contig metrics rule ook toe te voegen?
@@ -259,6 +270,12 @@ include: f"{rls}BG_removal_3.smk"
 #>############################################################################
 include: f"{rls}ILM_Ref_index.smk"
 
+
+## remove primers
+include: f"{rls}ILM_Ref_RemovePrimers.smk"
+
+
+include: f"{rls}ILM_Ref_QC_clean.smk"
 # iteration 1
 include: f"{rls}ILM_Ref_align_to_ref_it1.smk"
 include: f"{rls}ILM_Ref_extract_raw_cons_it1.smk"
@@ -292,13 +309,16 @@ include: f"{rls}ILM_Ref_igv_combi.smk"
 onsuccess:
     shell("""
         echo -e "\nCleaning up..."
+
+        if test -f "placeholder_primers.fasta"; then
+            rm placeholder_primers.fasta
+        fi
+
         
         echo -e "\tRemoving temporary files..."
         if [ "{config[remove_temp]}" != "0" ]; then
             rm -rf {datadir}{html}   # Remove intermediate IGVjs html chunks.
             rm -rf {datadir}{cln}{hugo_no_rm}    # Remove HuGo alignment files
-            rm -rf data/it1
-            rm -rf data/cleaned_fastq
         else
             echo -e "\t\tYou chose to not remove temp files: the human genome alignment files are not removed."
         fi

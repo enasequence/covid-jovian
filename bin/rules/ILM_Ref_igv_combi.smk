@@ -9,7 +9,7 @@ rule Illumina_HTML_IGVJs_generate_final:
                 sample      = SAMPLES
                 )
     output:
-        f"{res}igv.html"
+        f"{res}igv_ilr.html"
     conda:
         f"{conda_envs}data_wrangling.yaml"
     log:
@@ -17,6 +17,8 @@ rule Illumina_HTML_IGVJs_generate_final:
     benchmark:
         f"{logdir + bench}Illumina_HTML_IGVJs_generate_final.txt"
     threads: 1
+    resources:
+        memory = 4 * 1024
     params:
         chunkpath       =   f"{fls + chunks}", 
         tab_basename    =   f"{datadir + html}2_tab_",

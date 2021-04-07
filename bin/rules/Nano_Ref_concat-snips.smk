@@ -11,9 +11,31 @@ rule SNP_table:
     benchmark:
         f"{logdir + bench}Concatenated_SNPs.txt"
     threads: 1
+    resources:
+        memory = 4 * 1024
     shell:
         """
 echo -e "Sample\tReference AccessionID\tPosition\tType\tReference\tAlternative\tQuality" > {output}
+
+cat {input} >> {output}
+        """
+
+rule concat_ins:
+    input:
+        expand( rules.consensus_cov_5.output.ins,
+                sample = SAMPLES
+            )
+    output: f"{res}INS.tsv"
+    log:
+        f"{logdir}concat_ins.log"
+    benchmark:
+        f"{logdir + bench}concat_ins.txt"
+    threads: 1
+    resources:
+        memory = 4 * 1024
+    shell:
+        """
+echo -e "Sample\tHas Insertions?\tPositions\tPercentage of reads" > {output}
 
 cat {input} >> {output}
         """

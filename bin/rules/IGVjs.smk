@@ -23,6 +23,11 @@ rule HTML_IGVJs_variable_parts:
     benchmark:
         f"{logdir + bench}" + "HTML_IGVJs_variable_parts_{sample}.txt"
     threads: 1
+<<<<<<< HEAD
+=======
+    resources:
+        memory = 4 * 1024
+>>>>>>> 77422ff0083309b24f6b2633112f1d03eb46c02a
     shell:
         """
 bash bin/html/igvjs_write_tabs.sh {wildcards.sample} {output.tab_output}
@@ -46,7 +51,7 @@ rule HTML_IGVJs_generate_final:
                 sample      =   SAMPLES
                 )
     output:
-        f"{res}igv.html"
+        f"{res}igv_meta.html"
     conda:
         f"{conda_envs}data_wrangling.yaml"
     log:
@@ -54,6 +59,8 @@ rule HTML_IGVJs_generate_final:
     benchmark:
         f"{logdir + bench}benchmark/HTML_IGVJs_generate_final.txt"
     threads: 1
+    resources:
+        memory = 4 * 1024
     params:
         tab_basename    =   f"{datadir + html}2_tab_",
         div_basename    =   f"{datadir + html}4_html_divs_",

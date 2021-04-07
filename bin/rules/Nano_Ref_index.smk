@@ -1,5 +1,3 @@
-
-
 rule Index_ref:
     input:
         ref =   reference
@@ -13,8 +11,10 @@ rule Index_ref:
     benchmark:
         f"{logdir + bench}Index_ref.txt"
     threads: 4
+    resources:
+        memory = 8 * 1024
     shell:
         """
-cat {input.ref} | seqtk seq - > {output.refcopy}
+cat {input.ref} | seqkit replace -p "\-" -s -r "N" > {output.refcopy}
 bowtie2-build --threads {threads} {output.refcopy} {output.refcopy} >> {log} 2>&1
         """
