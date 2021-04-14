@@ -23,11 +23,8 @@ rule HTML_IGVJs_variable_parts:
     benchmark:
         f"{logdir + bench}" + "HTML_IGVJs_variable_parts_{sample}.txt"
     threads: 1
-<<<<<<< HEAD
-=======
     resources:
         memory = 4 * 1024
->>>>>>> 77422ff0083309b24f6b2633112f1d03eb46c02a
     shell:
         """
 bash bin/html/igvjs_write_tabs.sh {wildcards.sample} {output.tab_output}

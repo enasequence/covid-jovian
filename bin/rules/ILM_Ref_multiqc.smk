@@ -43,11 +43,8 @@ rule Illumina_MultiQC_report:
     benchmark:
         f"{logdir + bench}Illumina_MultiQC_report.txt"
     threads: 1
-<<<<<<< HEAD
-=======
     resources:
         memory = 8 * 1024
->>>>>>> 77422ff0083309b24f6b2633112f1d03eb46c02a
     params:
         config_file =   f"{fls}multiqc_config.yaml",
         output_dir  =   f"{res}",
