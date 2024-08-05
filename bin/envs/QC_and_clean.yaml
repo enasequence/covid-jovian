@@ -2,7 +2,7 @@ name: QC_and_clean
 channels:
   - bioconda
   - conda-forge
-  - defaults
+
 dependencies:
     - fastqc==0.11.8
     - trimmomatic==0.38

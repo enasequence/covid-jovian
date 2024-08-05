@@ -2,7 +2,7 @@ name: heatmaps
 channels:
   - conda-forge
   - bioconda
-  - defaults
+
 dependencies:
   - bokeh=1.0.1
   - numpy=1.15.4
