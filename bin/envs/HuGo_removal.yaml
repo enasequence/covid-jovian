@@ -2,7 +2,7 @@ name: HuGo_removal
 channels:
   - bioconda
   - conda-forge
-  - defaults
+
 dependencies:
     - bowtie2==2.3.4.3
     - samtools==1.9
